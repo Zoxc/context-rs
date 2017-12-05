@@ -18,8 +18,10 @@ extern "C" {
     /// * `sp`   - A pointer to the bottom of the stack.
     /// * `size` - The size of the stack.
     /// * `f`    - A function to be invoked on the first call to jump_fcontext(this, _).
-    #[inline(never)]
+    #[cfg(not(windows))]
     fn make_fcontext(sp: *mut c_void, size: usize, f: ContextFn) -> &'static c_void;
+    #[cfg(windows)]
+    fn make_fcontext(sp: *mut c_void, size: usize, f: ContextFn, limit: *mut c_void) -> &'static c_void;
 
     /// Yields the execution to another `Context`.
     ///
@@ -73,7 +75,14 @@ impl Context {
     /// `Stack` lives longer than the generated `Context`.
     #[inline(always)]
     pub unsafe fn new(stack: &Stack, f: ContextFn) -> Context {
+        #[cfg(not(windows))]
+        {
         Context(make_fcontext(stack.top(), stack.len(), f))
+        }
+        #[cfg(windows)]
+        {
+        Context(make_fcontext(stack.top(), stack.len(), f, stack.limit()))
+        }
     }
 
     /// Yields the execution to another `Context`.

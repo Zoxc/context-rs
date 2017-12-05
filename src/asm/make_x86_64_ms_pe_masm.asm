@@ -78,8 +78,8 @@ make_fcontext PROC BOOST_CONTEXT_EXPORT FRAME
     neg  rdx
     ; compute bottom address of context stack (limit)
     lea  rcx, [rcx+rdx]
-    ; save bottom address of context stack as 'limit'
-    mov  [rax+010h], rcx
+    ; save limit address of context stack as 'limit'
+    mov  [rax+010h], r9
     ; save address of context stack limit as 'dealloction stack'
     mov  [rax+08h], rcx
 
@@ -89,10 +89,10 @@ make_fcontext PROC BOOST_CONTEXT_EXPORT FRAME
     mov [rax+060h], rcx
 
     ; compute abs address of label finish
-    lea  rcx, finish
+    ;lea  rcx, finish
     ; save address of finish as return-address for context-function
     ; will be entered after context-function returns
-    mov  [rax+070h], rcx
+    mov  qword ptr [rax+070h], 0
 
     ret ; return pointer to context-data
 

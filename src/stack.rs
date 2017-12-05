@@ -29,6 +29,7 @@ pub enum StackError {
 pub struct Stack {
     top: *mut c_void,
     bottom: *mut c_void,
+    limit: *mut c_void,
 }
 
 impl Stack {
@@ -37,12 +38,15 @@ impl Stack {
     /// It is unsafe because it is your reponsibility to make sure that `top` and `buttom` are valid
     /// addresses.
     #[inline]
-    pub unsafe fn new(top: *mut c_void, bottom: *mut c_void) -> Stack {
+    pub unsafe fn new(top: *mut c_void, bottom: *mut c_void, limit: *mut c_void) -> Stack {
         debug_assert!(top >= bottom);
+        debug_assert!(limit >= bottom);
+        debug_assert!(top >= limit);
 
         Stack {
             top: top,
             bottom: bottom,
+            limit: limit,
         }
     }
 
@@ -56,6 +60,12 @@ impl Stack {
     #[inline]
     pub fn bottom(&self) -> *mut c_void {
         self.bottom
+    }
+
+    /// Returns the limit of the stack
+    #[inline]
+    pub fn limit(&self) -> *mut c_void {
+        self.limit
     }
 
     /// Returns the size of the stack between top() and bottom().
