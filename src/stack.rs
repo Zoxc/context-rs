@@ -5,7 +5,6 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use std::mem;
 use std::io;
 use std::ops::Deref;
 use std::os::raw::c_void;
@@ -216,11 +215,8 @@ impl Default for ProtectedFixedSizeStack {
 
 impl Drop for ProtectedFixedSizeStack {
     fn drop(&mut self) {
-        let page_size = sys::page_size();
-        let guard = (self.0.bottom() as usize - page_size) as *mut c_void;
-        let size_with_guard = self.0.len() + page_size;
         unsafe {
-            sys::deallocate_stack(guard, size_with_guard);
+            sys::deallocate_stack(self.0.bottom(), self.0.len());
         }
     }
 }
