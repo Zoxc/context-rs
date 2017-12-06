@@ -14,6 +14,7 @@ mod unix;
 pub use self::unix::{
     allocate_stack,
     deallocate_stack,
+    poison_stack,
     max_stack_size,
     min_stack_size,
     page_size,
@@ -27,6 +28,7 @@ mod windows;
 pub use self::windows::{
     allocate_stack,
     deallocate_stack,
+    poison_stack,
     max_stack_size,
     min_stack_size,
     page_size,

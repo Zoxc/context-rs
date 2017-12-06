@@ -53,6 +53,21 @@ pub unsafe fn protect_stack(stack: &Stack) -> io::Result<Stack> {
     }
 }
 
+pub unsafe fn poison_stack(stack: &Stack) {
+    let page_size = page_size();
+
+    debug_assert!(stack.len() % page_size == 0 && stack.len() != 0);
+
+    let ret = {
+        let bottom = stack.bottom() as *mut libc::c_void;
+        libc::mprotect(bottom, stack.len(), libc::PROT_NONE)
+    };
+
+    if ret != 0 {
+        panic!("unable to poison stack");
+    }
+}
+
 pub unsafe fn deallocate_stack(ptr: *mut c_void, size: usize) {
     libc::munmap(ptr as *mut libc::c_void, size);
 }

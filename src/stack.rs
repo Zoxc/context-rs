@@ -5,6 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use std::mem;
 use std::io;
 use std::ops::Deref;
 use std::os::raw::c_void;
@@ -189,6 +190,12 @@ impl ProtectedFixedSizeStack {
     /// does not include the size of the guard page itself.
     pub fn new(size: usize) -> Result<ProtectedFixedSizeStack, StackError> {
         Stack::allocate(size, true).map(ProtectedFixedSizeStack)
+    }
+
+    /// Poison the stack making it segfault if used
+    pub fn poison(self) {
+        unsafe { sys::poison_stack(&self.0) };
+        mem::forget(self);
     }
 }
 
