@@ -56,25 +56,22 @@ pub unsafe fn allocate_stack(size: usize) -> io::Result<Stack> {
     // Commit the user memory and the guaranteed pages
     let committed_total = committed_user + stack_guarantee;
 
-    kernel32::VirtualAlloc((stack_high - committed_total) as _, committed_total as winapi::SIZE_T, winapi::MEM_COMMIT, winapi::PAGE_READWRITE);
+    if kernel32::VirtualAlloc((stack_high - committed_total) as _, committed_total as winapi::SIZE_T, winapi::MEM_COMMIT, winapi::PAGE_READWRITE) == NULL {
+        panic!("unable to commit memory");
+    }
 
     // Guard the guaranteed pages
     let mut old = 0;
-    kernel32::VirtualProtect((stack_high - committed_total) as winapi::LPVOID, stack_guarantee as winapi::SIZE_T, winapi::PAGE_READWRITE | winapi::PAGE_GUARD, &mut old);
-    
-    let ptr = kernel32::VirtualAlloc(NULL, size as winapi::SIZE_T, TYPE, PROT);
-
-    if ptr == NULL {
-        Err(io::Error::last_os_error())
-    } else {
-        Ok(Stack::new(stack_high as *mut c_void, stack_low as *mut c_void, (stack_high - committed_user) as *mut c_void))
+    if kernel32::VirtualProtect((stack_high - committed_total) as winapi::LPVOID, stack_guarantee as winapi::SIZE_T, winapi::PAGE_READWRITE | winapi::PAGE_GUARD, &mut old) == winapi::FALSE {
+        panic!("unable to guard pages");
     }
+    
+    Ok(Stack::new(stack_high as *mut c_void, stack_low as *mut c_void, (stack_high - committed_user) as *mut c_void))
 }
 
 pub unsafe fn poison_stack(stack: &Stack) {
-    let mut old = 0;
-    if kernel32::VirtualProtect(stack.bottom(), stack.len() as winapi::SIZE_T, 0, &mut old) == 0 as _ {
-        panic!("unable to poison stack");
+    if kernel32::VirtualFree(stack.bottom(), 0 as winapi::SIZE_T, winapi::MEM_DECOMMIT) == 0 as _ {
+        panic!("unable to poison stack {:?}", io::Error::last_os_error());
     }
 }
 
