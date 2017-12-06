@@ -17,16 +17,6 @@ use winapi;
 
 use stack::Stack;
 
-extern "system" {
-    // TODO: kernel32-sys has currently (0.2.1) a bug where lpflOldProtect
-    // is declared as a DWORD, but should be PDWORD instead.
-    pub fn VirtualProtect(lpAddress: winapi::LPVOID,
-                          dwSize: winapi::SIZE_T,
-                          flNewProtect: winapi::DWORD,
-                          lpflOldProtect: winapi::PDWORD)
-                          -> winapi::BOOL;
-}
-
 fn get_thread_stack_guarantee() -> usize {
     let min_guarantee = if cfg!(target_pointer_width = "32") {
         0x1000
@@ -78,6 +68,13 @@ pub unsafe fn allocate_stack(size: usize) -> io::Result<Stack> {
         Err(io::Error::last_os_error())
     } else {
         Ok(Stack::new(stack_high as *mut c_void, stack_low as *mut c_void, (stack_high - committed_user) as *mut c_void))
+    }
+}
+
+pub unsafe fn poison_stack(stack: &Stack) {
+    let mut old = 0;
+    if kernel32::VirtualProtect(stack.bottom(), stack.len() as winapi::SIZE_T, 0, &mut old) == 0 as _ {
+        panic!("unable to poison stack");
     }
 }
 
