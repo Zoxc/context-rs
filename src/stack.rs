@@ -40,8 +40,6 @@ impl Stack {
     #[inline]
     pub unsafe fn new(top: *mut c_void, bottom: *mut c_void, limit: *mut c_void) -> Stack {
         debug_assert!(top >= bottom);
-        debug_assert!(limit >= bottom);
-        debug_assert!(top >= limit);
 
         Stack {
             top: top,
