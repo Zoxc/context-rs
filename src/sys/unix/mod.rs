@@ -31,7 +31,7 @@ pub unsafe fn allocate_stack(size: usize) -> io::Result<Stack> {
     if ptr == libc::MAP_FAILED {
         Err(io::Error::last_os_error())
     } else {
-        Ok(Stack::new((ptr as usize + size) as *mut c_void, ptr as *mut c_void))
+        Ok(Stack::new((ptr as usize + size) as *mut c_void, ptr as *mut c_void, 0 as *mut c_void))
     }
 }
 
@@ -49,7 +49,7 @@ pub unsafe fn protect_stack(stack: &Stack) -> io::Result<Stack> {
         Err(io::Error::last_os_error())
     } else {
         let bottom = (stack.bottom() as usize + page_size) as *mut c_void;
-        Ok(Stack::new(stack.top(), bottom))
+        Ok(Stack::new(stack.top(), bottom, 0 as *mut c_void))
     }
 }
 
