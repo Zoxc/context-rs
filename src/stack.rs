@@ -193,9 +193,8 @@ impl ProtectedFixedSizeStack {
     }
 
     /// Poison the stack making it segfault if used
-    pub fn poison(self) {
+    pub fn poison(&self) {
         unsafe { sys::poison_stack(&self.0) };
-        mem::forget(self);
     }
 }
 
